@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,10 +15,12 @@ export default function SedesScreen() {
 
     const { list: sedes, loading, error } = useSelector((state: any) => state.canchas);
 
-    useEffect(() => {
-        // @ts-ignore
-        dispatch(fetchCanchas(""));
-    }, [dispatch]);
+    useFocusEffect(
+        useCallback(() => {
+            // @ts-ignore
+            dispatch(fetchCanchas(""));
+        }, [dispatch])
+    );
 
     const renderSedeCard = ({ item }: { item: any }) => (
         <View style={styles.card}>
@@ -42,8 +44,7 @@ export default function SedesScreen() {
             <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => {
-                    // Navigating to Escenarios list inside the venue in the future
-                    console.log("Navegar a Escenarios de Sede:", item._id);
+                    router.push(`/escenarios/${item._id}` as any);
                 }}
             >
                 <Text style={styles.actionButtonText}>Ver escenarios</Text>
