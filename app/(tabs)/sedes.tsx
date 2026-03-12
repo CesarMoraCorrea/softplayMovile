@@ -4,10 +4,18 @@ import React, { useCallback } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCanchas } from '../../store/slices/canchasSlice'; // Alias used in Web for Venues
+import { fetchCanchas } from '../../store/slices/canchasSlice'; // Acción para recuperar las Sedes (Canchas globalmente) desde Redux
 
 const { width } = Dimensions.get('window');
 
+/**
+ * Pantalla de Sedes (Complejos Deportivos):
+ * Al entrar, este componente dispara una acción (Thunk) a nuestro estado global de Redux (`canchasSlice`).
+ * Redux se encarga de ir a buscar la información a Vercel y nos la devuelve.
+ * 
+ * Usamos `useFocusEffect` en lugar de un `useEffect` tradicional para forzar que los datos se recarguen 
+ * CADA VEZ que el usuario vuelve a ver esta pantalla (ej. usando la flecha de Atrás).
+ */
 export default function SedesScreen() {
     const dispatch = useDispatch();
     const router = useRouter();
@@ -54,7 +62,7 @@ export default function SedesScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
+            {/* Piezas del Encabezado Superior */}
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color="#1F2937" />
@@ -67,7 +75,7 @@ export default function SedesScreen() {
                 </View>
             </View>
 
-            {/* Content */}
+            {/* Contenido Dinámico de la Lista según su Estado */}
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#3B5ADB" />

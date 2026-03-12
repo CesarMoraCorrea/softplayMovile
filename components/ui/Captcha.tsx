@@ -46,7 +46,7 @@ export default function Captcha({ onCaptchaChange, onVerifiedChange, error, disa
         setInputValue(text);
         if (captchaData) {
             onCaptchaChange(captchaData.id, text);
-            // We assume user has typed it all if length >= 4 (svgCaptcha default size is 5 usually)
+            // Validamos temporalmente que el usuario haya escrito algún caracter para habilitar el botón
             onVerifiedChange(text.length > 0);
         }
     };
@@ -66,7 +66,7 @@ export default function Captcha({ onCaptchaChange, onVerifiedChange, error, disa
                     </View>
                 ) : captchaData?.svg ? (
                     <View style={styles.svgWrapper}>
-                        {/* Inyectamos SVG directo de Vercel */}
+                        {/* Renderizamos la imagen SVG proveniente del servidor de forma nativa */}
                         <SvgXml xml={captchaData.svg} width="150" height="50" fallback={
                             <Text>Error SVG</Text>
                         } />

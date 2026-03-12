@@ -3,13 +3,20 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import api from '../../utils/api'; // Local API configuration to bypass Redux overlap
+import api from '../../utils/api'; // Usamos nuestra propia conexión a la API
 
 const { width } = Dimensions.get('window');
 
-// Fallback image in case the Venue doesn't have cover photos
+// Imagen por defecto en caso de que la Sede no tenga fotos para mostrar
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=600&auto=format&fit=crop";
 
+/**
+ * Pantalla de Escenarios (Canchas de una Sede Específica):
+ * A diferencia de la pantalla anterior que usa Redux Global, AQUÍ usamos una lógica 100% local (useState + useEffect).
+ * Esto evita el "choque de tarjetas" y cruce de datos al ir y volver entre ambas pantallas.
+ * 
+ * Capturamos el `sedeId` de la URL dinámicamente y se lo pasamos al servidor para filtrar.
+ */
 export default function EscenariosScreen() {
     const { sedeId } = useLocalSearchParams();
     const router = useRouter();
@@ -19,15 +26,16 @@ export default function EscenariosScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Función para obtener los escenarios de la sede actual desde nuestro backend
     const fetchLocalEscenarios = async () => {
         try {
             setLoading(true);
-            setError(null); // Clear previous errors
+            setError(null); // Limpiamos cualquier error previo
             const { data } = await api.get(`/sedes?view=escenarios&sedeId=${sedeId}`);
             setEscenarios(data);
         } catch (err: any) {
             setError(err.message || "Error al cargar los escenarios");
-            setEscenarios([]); // Clear scenarios on error
+            setEscenarios([]); // Si algo falla, vaciamos la lista
         } finally {
             setLoading(false);
         }
@@ -40,7 +48,7 @@ export default function EscenariosScreen() {
     }, [sedeId]);
 
     const renderEscenarioCard = ({ item }: { item: any }) => {
-        // Pick the first image in array or fallback
+        // Tomamos la primera imagen disponible o mostramos nuestra foto por defecto
         const coverImage = item.imagenes && item.imagenes.length > 0
             ? { uri: item.imagenes[0] }
             : { uri: FALLBACK_IMAGE };
@@ -72,7 +80,7 @@ export default function EscenariosScreen() {
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => {
-                                // Future Implementation: Navigate to Booking process
+                                // Aquí irá la funcionalidad futura para reservar esta cancha
                                 console.log("Reservar Escenario:", item._id);
                             }}
                         >
@@ -86,7 +94,7 @@ export default function EscenariosScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
+            {/* Encabezado de la pantalla con el botón para regresar */}
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color="#1F2937" />
@@ -99,7 +107,7 @@ export default function EscenariosScreen() {
                 </View>
             </View>
 
-            {/* Content */}
+            {/* Contenido principal: manejamos los estados de carga, error o la lista de canchas */}
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#3B5ADB" />

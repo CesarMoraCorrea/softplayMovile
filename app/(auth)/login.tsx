@@ -12,6 +12,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import Captcha from '../../components/ui/Captcha';
 import { loginThunk } from '../../store/slices/authSlice';
 
+/**
+ * Pantalla de Inicio de Sesión (LoginScreen):
+ * Este componente maneja la autenticación del usuario. Utiliza estados locales para el control
+ * de los campos del formulario (email, password) y la validación de un Captcha (SVG) dinámico.
+ * Si todo es correcto, despacha la acción a Redux para guardar la sesión.
+ */
 export default function LoginScreen() {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +70,7 @@ export default function LoginScreen() {
     };
 
     const handleSubmit = () => {
-        // Marcamos todos como tocados
+        // Marcamos todos los campos como "tocados" para activar la alerta roja en caso de que estén vacíos
         setTouched({ email: true, password: true, captcha: true });
 
         if (Object.keys(formErrors).length === 0 && formData.email && formData.password && captchaInput) {
@@ -78,6 +84,7 @@ export default function LoginScreen() {
     };
 
     return (
+        // KeyboardAvoidingView: Evita que el teclado virtual del teléfono tape los inputs (como el de contraseña)
         <KeyboardAvoidingView
             style={styles.container}
             behavior="padding"
@@ -99,7 +106,7 @@ export default function LoginScreen() {
                 </View>
 
                 <View style={styles.formCard}>
-                    {/* Email Field */}
+                    {/* Campo de Correo Electrónico */}
                     <View style={styles.inputGroup}>
                         <View style={styles.labelContainer}>
                             <Ionicons name="mail" size={16} color="#6B7280" />
@@ -120,7 +127,7 @@ export default function LoginScreen() {
                         {formErrors.email && <Text style={styles.errorText}>{formErrors.email}</Text>}
                     </View>
 
-                    {/* Password Field */}
+                    {/* Campo de Contraseña */}
                     <View style={styles.inputGroup}>
                         <View style={styles.labelContainer}>
                             <Ionicons name="lock-closed" size={16} color="#6B7280" />
@@ -155,14 +162,14 @@ export default function LoginScreen() {
                         disabled={loading}
                     />
 
-                    {/* Error de Redux */}
+                    {/* Renderización de errores devueltos por Vercel / Redux (ej. "Contraseña incorrecta") */}
                     {error && (
                         <View style={styles.serverError}>
                             <Text style={styles.serverErrorText}>{error}</Text>
                         </View>
                     )}
 
-                    {/* Botón Submit */}
+                    {/* Botón para Iniciar Sesión */}
                     <TouchableOpacity
                         style={[styles.submitBtn, (loading || Object.keys(formErrors).length > 0 || !captchaVerified) && styles.submitBtnDisabled]}
                         onPress={handleSubmit}
@@ -199,7 +206,7 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     iconContainer: {
-        backgroundColor: '#4F46E5', // Indigo 600
+        backgroundColor: '#4F46E5', // Color índigo para el contenedor del icono de candado
         width: 64,
         height: 64,
         borderRadius: 16,

@@ -5,10 +5,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 
-// Graphic Width relative to screen
+// Calculando el ancho del gráfico basado en el tamaño de la pantalla
 const { width } = Dimensions.get('window');
 const GRAPHIC_WIDTH = width - 80;
 
+/**
+ * Pantalla de Inicio Principal (HomeScreen):
+ * Esta es la primera pantalla que ve el usuario al entrar a la app (Dashboard). 
+ * Muestra las opciones principales como buscar canchas ("Reservar ahora") y ver sus reservas.
+ * También dibuja una rústica pero bonita cancha de fútbol usando "Views" nativos.
+ */
 export default function HomeScreen() {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -25,7 +31,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top Navigation Bar / Logo area */}
+      {/* Barra de navegación superior y Logo */}
       <View style={[styles.navBar, { paddingTop: Math.max(insets.top, 16) }]}>
         <Text style={styles.logoText}>SoftPlay</Text>
         <TouchableOpacity onPress={handleLogout}>
@@ -34,14 +40,14 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.content}>
-        {/* Main Card */}
+        {/* Tarjeta Principal */}
         <View style={styles.card}>
           <Text style={styles.title}>Reserva tu cancha ahora</Text>
           <Text style={styles.description}>
             Encuentra y reserva las mejores canchas deportivas cerca de ti. Fútbol, tenis, básquet, pádel y más deportes disponibles con reserva inmediata.
           </Text>
 
-          {/* Buttons Row */}
+          {/* Fila de botones de acción */}
           <View style={styles.buttonsContainer}>
             <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={goToSedes}>
               <Text style={styles.primaryButtonText}>Reservar ahora</Text>
@@ -52,22 +58,22 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Graphic Element: Football Field */}
-          {/* A rectangle with borders, a center line, a center circle, and goal boxes */}
+          {/* Elemento gráfico: Cancha de fútbol dibujada puramente con vistas nativas */}
+          {/* Un rectángulo perimetral con línea divisoria intermedia, círculo central y áreas de portería */}
           <View style={styles.graphicContainer}>
             <Text style={styles.graphicText}>SoftPlay</Text>
 
             <View style={[styles.field, { width: GRAPHIC_WIDTH, height: GRAPHIC_WIDTH * 0.6 }]}>
-              {/* Left Penalty Area */}
+              {/* Área de portería izquierda */}
               <View style={styles.leftPenaltyArea} />
 
-              {/* Center Line */}
+              {/* Línea divisoria central */}
               <View style={styles.centerLine} />
 
-              {/* Center Circle */}
+              {/* Círculo del medio campo */}
               <View style={styles.centerCircle} />
 
-              {/* Right Penalty Area */}
+              {/* Área de portería derecha */}
               <View style={styles.rightPenaltyArea} />
             </View>
           </View>
@@ -81,7 +87,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA', // Lightest gray/white background
+    backgroundColor: '#F8F9FA', // Fondo muy claro para resaltar la tarjeta blanca
   },
   navBar: {
     flexDirection: 'row',
@@ -96,7 +102,7 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#3B5ADB', // Matched Blue logo color from image
+    color: '#3B5ADB', // Color azul rescatado del diseño de marca de prueba
   },
   logoutText: {
     fontSize: 14,
@@ -126,7 +132,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#3B5ADB', // The blue tone from the design
+    color: '#3B5ADB', // Tono azul principal del diseño
     marginBottom: 16,
     textAlign: 'left',
     width: '100%',
@@ -134,7 +140,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#4B5563', // Gray text
+    color: '#4B5563', // Texto descriptivo en escala de grises
     lineHeight: 24,
     marginBottom: 24,
     textAlign: 'left',
@@ -165,14 +171,14 @@ const styles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB', // Subtle gray border
+    borderColor: '#D1D5DB', // Borde gris muy sutil
   },
   secondaryButtonText: {
     color: '#374151',
     fontWeight: '500',
     fontSize: 14,
   },
-  // --- Graphic Field Styles ---
+  // --- Estilos del gráfico de la cancha ---
   graphicContainer: {
     width: '100%',
     alignItems: 'center',
@@ -187,7 +193,7 @@ const styles = StyleSheet.create({
   },
   field: {
     borderWidth: 2,
-    borderColor: '#3B5ADB', // Blue borders mapping to the design lines
+    borderColor: '#3B5ADB', // Bordes azules que simulan las líneas delimitantes de la cancha
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
@@ -216,7 +222,7 @@ const styles = StyleSheet.create({
     height: '60%',
     borderWidth: 2,
     borderColor: '#3B5ADB',
-    borderLeftWidth: 0, // blends with the main border
+    borderLeftWidth: 0, // Se elimina el borde izquierdo para que se fusione con el perímetro mayor
   },
   rightPenaltyArea: {
     position: 'absolute',
