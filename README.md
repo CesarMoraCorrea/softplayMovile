@@ -1,50 +1,72 @@
-# Welcome to your Expo app 👋
+# SoftPlay Mobile ⚽🏀🎾
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![SoftPlay Cover](https://via.placeholder.com/800x400.png?text=SoftPlay+Mobile+App) <!-- Reemplaza este enlace con el de una imagen real de tu app -->
 
-## Get started
+## Descripción 📖
+**SoftPlay Mobile** es una aplicación innovadora, construida con React Native y Expo Router, diseñada para conectar a los amantes del deporte con los mejores complejos deportivos de la ciudad. 
 
-1. Install dependencies
+Con SoftPlay, los usuarios pueden:
+- 📍 Explorar sedes deportivas cercanas a ellos.
+- 🏟️ Ver en detalle los escenarios y canchas disponibles dentro de cada sede.
+- 📆 (Próximamente) Agendar y gestionar sus reservaciones deportivas de forma sencilla.
+- 🔐 Iniciar sesión de forma segura y validar el acceso gracias a la conexión con nuestra robusta API.
 
+---
+
+## Equipo / Integrantes 🤝
+- **César Mora Correa** - *Desarrollo Mobile / Frontend*
+- *(Actualmente tu eres el lead dev aquí, puedes agregar más integrantes según corresponda)*
+
+---
+
+## Vista Previa de la Aplicación 📱
+Aquí puedes adjuntar capturas de pantalla de la app en funcionamiento.
+*(Guarda tus capturas en la carpeta del repositorio y cambia la ruta correspondiente, por ejemplo `./assets/images/screenshot1.png`)*
+
+<div style="display: flex; gap: 10px;">
+  <img src="./assets/readme/login.jpg" width="200" alt="Login Screenshot" />
+  <img src="./assets/readme/home.jpg" width="200" alt="Home Screenshot" />
+  <img src="./assets/readme/sedes.jpg" width="200" alt="Sedes Screenshot" />
+  <img src="./assets/readme/escenarios.jpg" width="200" alt="Escenarios Screenshot" />
+</div>
+
+---
+
+## Stack Tecnológico 🛠️
+- **Frontend / Mobile Structure**: React Native + Expo Router
+- **Estilos de UI**: Vanilla React Native StyleSheet
+- **Navegación**: [Expo Router (File-based routing)](https://docs.expo.dev/router/introduction)
+- **State Management**: Redux Toolkit + React-Redux
+- **API Requests**: Axios
+
+---
+
+## Instalación y Ejecución Local 🚀
+
+1. **Clonar el repositorio y moverse a la carpeta**
+   ```bash
+   git clone https://github.com/tu-usuario/softplay-movile.git
+   cd softplayMovile
+   ```
+
+2. **Instalar las dependencias**
+   Asegúrate de tener Node.js instalado.
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. **Iniciar el servidor de desarrollo**
+   Usamos Expo CLI para empaquetar y ejecutar la app.
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+   Una vez que el comando se ejecute:
+   - Presiona **`a`** para abrir en un Emulador de **Android**.
+   - Presiona **`i`** para abrir en un Simulador de **iOS** (Solo disponible en Mac).
+   - O descarga la app de **Expo Go** en tu dispositivo físico y escanea el código QR de la terminal para usarlo desde tu teléfono.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Contribución 💻
+¡Si deseas colaborar, eres bienvenido a abrir un PR! Las modificaciones principales de la UI están estructuradas de forma que la carpeta `app/(tabs)` contenga las vistas protegidas del usuario principal.
