@@ -80,8 +80,15 @@ export default function EscenariosScreen() {
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => {
-                                // Aquí irá la funcionalidad futura para reservar esta cancha
-                                console.log("Reservar Escenario:", item._id);
+                                router.push({
+                                    pathname: `/reservas/[escenarioId]` as any,
+                                    params: { 
+                                        escenarioId: item.escenarioId || item._id, 
+                                        sedeId: sedeId,
+                                        nombreCancha: item.nombre,
+                                        precioHora: item.precioPorHora || item.precioHora || 0
+                                    }
+                                });
                             }}
                         >
                             <Text style={styles.actionButtonText}>Reservar</Text>

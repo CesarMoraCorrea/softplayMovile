@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-// apuntamos a la URL de Vercel proporcionada (sin el prefijo /api que causa error 404 en esta config de Vercel)
-const API_URL = "https://softplay-backend-almc0r68t-cesarmoracorreas-projects.vercel.app";
+// Apuntamos al backend de Vercel (develop preview)
+const API_URL = "https://softplay-backend-git-develop-cesarmoracorreas-projects.vercel.app";
 
 const api = axios.create({
   baseURL: API_URL,

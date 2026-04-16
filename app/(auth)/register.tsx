@@ -10,19 +10,15 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Captcha from '../../components/ui/Captcha';
-import { loginThunk } from '../../store/slices/authSlice';
+import { registerThunk } from '../../store/slices/authSlice';
 
-/**
- * Pantalla de Inicio de Sesión (LoginScreen):
- * Este componente maneja la autenticación del usuario. Utiliza estados locales para el control
- * de los campos del formulario (email, password) y la validación de un Captcha (SVG) dinámico.
- * Si todo es correcto, despacha la acción a Redux para guardar la sesión.
- */
-export default function LoginScreen() {
-    const [formData, setFormData] = useState({ email: '', password: '' });
+export default function RegisterScreen() {
+    const [formData, setFormData] = useState({ nombre: '', email: '', telefono: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [formErrors, setFormErrors] = useState<any>({});
     const [touched, setTouched] = useState<any>({});
+    
+    // Estados para el CAPTCHA
     const [captchaId, setCaptchaId] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
     const [captchaVerified, setCaptchaVerified] = useState(false);
@@ -35,18 +31,26 @@ export default function LoginScreen() {
         if (user) {
             router.replace('/(tabs)');
         }
-    }, [user]);
+    }, [user, router]);
 
     useEffect(() => {
         const errors: any = {};
+        if (touched.nombre && !formData.nombre) errors.nombre = "El nombre es requerido";
+        
         if (touched.email && !formData.email) {
             errors.email = "El email es requerido";
         } else if (touched.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             errors.email = "Formato de email inválido";
         }
+        
+        if (touched.telefono && !formData.telefono) {
+            errors.telefono = "El teléfono es requerido";
+        }
 
         if (touched.password && !formData.password) {
             errors.password = "La contraseña es requerida";
+        } else if (touched.password && formData.password.length < 6) {
+            errors.password = "Debe tener al menos 6 caracteres";
         }
 
         if (touched.captcha && !captchaInput) {
@@ -70,13 +74,18 @@ export default function LoginScreen() {
     };
 
     const handleSubmit = () => {
-        // Marcamos todos los campos como "tocados" para activar la alerta roja en caso de que estén vacíos
-        setTouched({ email: true, password: true, captcha: true });
+        setTouched({ nombre: true, email: true, telefono: true, password: true, captcha: true });
 
-        if (Object.keys(formErrors).length === 0 && formData.email && formData.password && captchaInput) {
+        if (
+            Object.keys(formErrors).length === 0 && 
+            formData.nombre && formData.email && formData.telefono && formData.password && captchaInput
+        ) {
             // @ts-ignore
-            dispatch(loginThunk({
-                ...formData,
+            dispatch(registerThunk({
+                name: formData.nombre, // El backend espera 'name'
+                email: formData.email,
+                telefono: formData.telefono, // Se envía por si el backend lo acepta a futuro
+                password: formData.password,
                 captchaId: captchaId,
                 captchaInput: captchaInput
             }));
@@ -84,7 +93,6 @@ export default function LoginScreen() {
     };
 
     return (
-        // KeyboardAvoidingView: Evita que el teclado virtual del teléfono tape los inputs (como el de contraseña)
         <KeyboardAvoidingView
             style={styles.container}
             behavior="padding"
@@ -98,15 +106,37 @@ export default function LoginScreen() {
             >
 
                 <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="arrow-back" size={24} color="#1F2937" />
+                    </TouchableOpacity>
                     <View style={styles.iconContainer}>
-                        <Ionicons name="lock-closed" size={32} color="#FFF" />
+                        <Ionicons name="person-add" size={32} color="#FFF" />
                     </View>
-                    <Text style={styles.title}>¡Bienvenido!</Text>
-                    <Text style={styles.subtitle}>Ingresa a tu cuenta para continuar</Text>
+                    <Text style={styles.title}>Crear Cuenta</Text>
+                    <Text style={styles.subtitle}>Regístrate para reservar escenarios</Text>
                 </View>
 
                 <View style={styles.formCard}>
-                    {/* Campo de Correo Electrónico */}
+                    {/* Nombre */}
+                    <View style={styles.inputGroup}>
+                        <View style={styles.labelContainer}>
+                            <Ionicons name="person" size={16} color="#6B7280" />
+                            <Text style={styles.label}>Nombre completo</Text>
+                        </View>
+                        <View style={[styles.inputWrapper, formErrors.nombre && styles.inputWrapperError]}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Tu nombre y apellido"
+                                value={formData.nombre}
+                                onChangeText={(val) => handleInputChange('nombre', val)}
+                                onBlur={() => handleBlur('nombre')}
+                                editable={!loading}
+                            />
+                        </View>
+                        {formErrors.nombre && <Text style={styles.errorText}>{formErrors.nombre}</Text>}
+                    </View>
+
+                    {/* Email */}
                     <View style={styles.inputGroup}>
                         <View style={styles.labelContainer}>
                             <Ionicons name="mail" size={16} color="#6B7280" />
@@ -127,7 +157,27 @@ export default function LoginScreen() {
                         {formErrors.email && <Text style={styles.errorText}>{formErrors.email}</Text>}
                     </View>
 
-                    {/* Campo de Contraseña */}
+                    {/* Teléfono */}
+                    <View style={styles.inputGroup}>
+                        <View style={styles.labelContainer}>
+                            <Ionicons name="call" size={16} color="#6B7280" />
+                            <Text style={styles.label}>Teléfono</Text>
+                        </View>
+                        <View style={[styles.inputWrapper, formErrors.telefono && styles.inputWrapperError]}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Ej: 3001234567"
+                                value={formData.telefono}
+                                onChangeText={(val) => handleInputChange('telefono', val)}
+                                onBlur={() => handleBlur('telefono')}
+                                keyboardType="phone-pad"
+                                editable={!loading}
+                            />
+                        </View>
+                        {formErrors.telefono && <Text style={styles.errorText}>{formErrors.telefono}</Text>}
+                    </View>
+
+                    {/* Password */}
                     <View style={styles.inputGroup}>
                         <View style={styles.labelContainer}>
                             <Ionicons name="lock-closed" size={16} color="#6B7280" />
@@ -162,14 +212,12 @@ export default function LoginScreen() {
                         disabled={loading}
                     />
 
-                    {/* Renderización de errores devueltos por Vercel / Redux (ej. "Contraseña incorrecta") */}
                     {error && (
                         <View style={styles.serverError}>
                             <Text style={styles.serverErrorText}>{error}</Text>
                         </View>
                     )}
 
-                    {/* Botón para Iniciar Sesión */}
                     <TouchableOpacity
                         style={[styles.submitBtn, (loading || Object.keys(formErrors).length > 0 || !captchaVerified) && styles.submitBtnDisabled]}
                         onPress={handleSubmit}
@@ -179,17 +227,16 @@ export default function LoginScreen() {
                         {loading ? (
                             <ActivityIndicator color="#FFF" />
                         ) : (
-                            <Text style={styles.submitBtnText}>Iniciar sesión</Text>
+                            <Text style={styles.submitBtnText}>Registrarse</Text>
                         )}
                     </TouchableOpacity>
 
                 </View>
 
-                {/* Enlace a Registro */}
-                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 24 }}>
-                    <Text style={{ color: '#6B7280', fontSize: 15 }}>¿No tienes cuenta? </Text>
-                    <TouchableOpacity onPress={() => router.push('/(auth)/register')} disabled={loading}>
-                        <Text style={{ color: '#4F46E5', fontSize: 15, fontWeight: 'bold' }}>Regístrate</Text>
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
+                    <TouchableOpacity onPress={() => router.back()} disabled={loading}>
+                        <Text style={styles.footerLink}>Inicia sesión</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -212,9 +259,17 @@ const styles = StyleSheet.create({
     header: {
         alignItems: 'center',
         marginBottom: 32,
+        position: 'relative',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        padding: 8,
+        zIndex: 1,
     },
     iconContainer: {
-        backgroundColor: '#4F46E5', // Color índigo para el contenedor del icono de candado
+        backgroundColor: '#4F46E5',
         width: 64,
         height: 64,
         borderRadius: 16,
@@ -236,6 +291,7 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 16,
         color: '#4B5563',
+        textAlign: 'center',
     },
     formCard: {
         backgroundColor: '#FFFFFF',
@@ -323,6 +379,21 @@ const styles = StyleSheet.create({
     submitBtnText: {
         color: '#FFFFFF',
         fontSize: 16,
+        fontWeight: 'bold',
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 24,
+    },
+    footerText: {
+        color: '#6B7280',
+        fontSize: 15,
+    },
+    footerLink: {
+        color: '#4F46E5',
+        fontSize: 15,
         fontWeight: 'bold',
     },
 });
