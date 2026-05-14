@@ -189,7 +189,7 @@ export default function LoginScreen() {
                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 24 }}>
                     <Text style={{ color: '#6B7280', fontSize: 15 }}>¿No tienes cuenta? </Text>
                     <TouchableOpacity onPress={() => router.push('/(auth)/register')} disabled={loading}>
-                        <Text style={{ color: '#4F46E5', fontSize: 15, fontWeight: 'bold' }}>Regístrate</Text>
+                        <Text style={{ color: '#3B82F6', fontSize: 15, fontWeight: 'bold' }}>Regístrate</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -214,14 +214,14 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     iconContainer: {
-        backgroundColor: '#4F46E5', // Color índigo para el contenedor del icono de candado
+        backgroundColor: '#3B82F6', // Color primario web para el contenedor del icono de candado
         width: 64,
         height: 64,
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
-        shadowColor: '#4F46E5',
+        shadowColor: '#3B82F6',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -304,12 +304,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     submitBtn: {
-        backgroundColor: '#4F46E5',
+        backgroundColor: '#3B82F6',
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
         marginTop: 8,
-        shadowColor: '#4F46E5',
+        shadowColor: '#3B82F6',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
