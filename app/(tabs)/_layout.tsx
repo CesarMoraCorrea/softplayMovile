@@ -59,12 +59,6 @@ export default function TabLayout() {
           tabBarBadge: undefined,
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          href: null, // Ocultar la tab de explore del router original
-        }}
-      />
     </Tabs>
   );
 }

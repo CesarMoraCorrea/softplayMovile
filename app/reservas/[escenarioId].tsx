@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
+import { LinearGradient } from 'expo-linear-gradient';
 import api from '../../utils/api';
+import CustomCalendar from '../../components/ui/CustomCalendar';
 
 // ─── Helpers de Tiempo ────────────────────────────────────────────────────────
 
@@ -62,35 +64,28 @@ const generarSlots = (cancha: any, dayOfWeek: number, duracionHoras: number): { 
 // ─── Indicador de Pasos ───────────────────────────────────────────────────────
 
 function StepIndicator({ step }: { step: number }) {
-    const steps = [
-        { n: 1, label: 'Detalles',  icon: 'options-outline'    },
-        { n: 2, label: 'Revisión',  icon: 'eye-outline'        },
-        { n: 3, label: '¡Listo!',   icon: 'checkmark-circle-outline' },
-    ];
     return (
-        <View style={styles.stepRow}>
-            {steps.map((s, idx) => (
-                <React.Fragment key={s.n}>
-                    <View style={styles.stepItem}>
-                        <View style={[
-                            styles.stepCircle,
-                            step > s.n  && styles.stepCircleDone,
-                            step === s.n && styles.stepCircleActive,
-                        ]}>
-                            {step > s.n
-                                ? <Ionicons name="checkmark" size={14} color="#fff" />
-                                : <Ionicons name={s.icon as any} size={14} color={step >= s.n ? '#fff' : '#9CA3AF'} />
-                            }
-                        </View>
-                        <Text style={[styles.stepLabel, step >= s.n && styles.stepLabelActive]}>
-                            {s.label}
-                        </Text>
-                    </View>
-                    {idx < steps.length - 1 && (
-                        <View style={[styles.stepLine, step > s.n && styles.stepLineDone]} />
-                    )}
-                </React.Fragment>
-            ))}
+        <View style={styles.stepperContainer}>
+            <View style={styles.step}>
+                <View style={[styles.stepCircle, styles.stepCircleActive]}>
+                    <Text style={styles.stepNumberActive}>1</Text>
+                </View>
+                <Text style={styles.stepLabelActive}>CANCHA</Text>
+            </View>
+            <View style={styles.stepLine} />
+            <View style={styles.step}>
+                <View style={[styles.stepCircle, step >= 1 ? styles.stepCircleActive : null]}>
+                    <Text style={step >= 1 ? styles.stepNumberActive : styles.stepNumber}>2</Text>
+                </View>
+                <Text style={step >= 1 ? styles.stepLabelActive : styles.stepLabel}>HORARIO</Text>
+            </View>
+            <View style={styles.stepLine} />
+            <View style={styles.step}>
+                <View style={[styles.stepCircle, step >= 2 ? styles.stepCircleActive : null]}>
+                    <Text style={step >= 2 ? styles.stepNumberActive : styles.stepNumber}>3</Text>
+                </View>
+                <Text style={step >= 2 ? styles.stepLabelActive : styles.stepLabel}>CONFIRMAR</Text>
+            </View>
         </View>
     );
 }
@@ -363,21 +358,17 @@ export default function ReservaEscenarioScreen() {
                             <Text style={styles.sectionTitle}>
                                 <Ionicons name="calendar-outline" size={16} color="#4F46E5" /> Fecha
                             </Text>
-                            <View style={styles.dateRow}>
-                                <TouchableOpacity style={styles.dateArrow} onPress={() => cambiarDia(-1)}>
-                                    <Ionicons name="chevron-back" size={22} color="#4B5563" />
-                                </TouchableOpacity>
-                                <View style={styles.dateDisplay}>
-                                    <Text style={styles.dateText}>
-                                        {fechaSeleccionada.toLocaleDateString('es-CO', {
-                                            weekday: 'long', day: 'numeric', month: 'long',
-                                        })}
-                                    </Text>
-                                </View>
-                                <TouchableOpacity style={styles.dateArrow} onPress={() => cambiarDia(1)}>
-                                    <Ionicons name="chevron-forward" size={22} color="#4B5563" />
-                                </TouchableOpacity>
-                            </View>
+                            <CustomCalendar 
+                                value={fechaSeleccionada} 
+                                onChange={(d) => {
+                                    setFechaSeleccionada(d);
+                                    setSlotSeleccionado(null);
+                                    if (bloqueoIdRef.current) {
+                                        api.delete(`/reservas/${bloqueoIdRef.current}`).catch(() => {});
+                                        setBloqueoId(null);
+                                    }
+                                }} 
+                            />
                         </View>
 
                         {/* Selector de Hora */}
@@ -524,11 +515,14 @@ export default function ReservaEscenarioScreen() {
                         )}
 
                         <TouchableOpacity
-                            style={[styles.confirmBtn, { marginTop: 20 }]}
+                            style={[styles.confirmBtnContainer, { marginTop: 20 }]}
                             onPress={() => router.replace('/(tabs)/reservas')}
+                            activeOpacity={0.8}
                         >
-                            <Ionicons name="calendar-outline" size={18} color="#fff" />
-                            <Text style={styles.confirmBtnText}>Ver Mis Reservas</Text>
+                            <LinearGradient colors={['#2563EB', '#4F46E5']} style={styles.confirmBtn}>
+                                <Ionicons name="calendar-outline" size={18} color="#fff" />
+                                <Text style={styles.confirmBtnText}>Ver Mis Reservas</Text>
+                            </LinearGradient>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -559,14 +553,17 @@ export default function ReservaEscenarioScreen() {
                         {step === 1 && (
                             <TouchableOpacity
                                 style={[
-                                    styles.confirmBtn,
+                                    styles.confirmBtnContainer,
                                     (slotSeleccionado === null || !bloqueoId) && styles.confirmBtnDisabled,
                                 ]}
                                 disabled={slotSeleccionado === null || !bloqueoId}
                                 onPress={() => setStep(2)}
+                                activeOpacity={0.8}
                             >
-                                <Text style={styles.confirmBtnText}>Revisar</Text>
-                                <Ionicons name="arrow-forward" size={18} color="#fff" />
+                                <LinearGradient colors={['#2563EB', '#4F46E5']} style={styles.confirmBtn}>
+                                    <Text style={styles.confirmBtnText}>Revisar</Text>
+                                    <Ionicons name="arrow-forward" size={18} color="#fff" />
+                                </LinearGradient>
                             </TouchableOpacity>
                         )}
 
@@ -581,17 +578,20 @@ export default function ReservaEscenarioScreen() {
                                     <Text style={styles.outlineBtnSmallText}>Atrás</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[styles.confirmBtn, confirmando && styles.confirmBtnDisabled]}
+                                    style={[styles.confirmBtnContainer, confirmando && styles.confirmBtnDisabled]}
                                     onPress={confirmarReserva}
                                     disabled={confirmando}
+                                    activeOpacity={0.8}
                                 >
-                                    {confirmando
-                                        ? <ActivityIndicator color="#fff" size="small" />
-                                        : <>
-                                            <Ionicons name="checkmark" size={18} color="#fff" />
-                                            <Text style={styles.confirmBtnText}>Confirmar</Text>
-                                          </>
-                                    }
+                                    <LinearGradient colors={['#2563EB', '#4F46E5']} style={styles.confirmBtn}>
+                                        {confirmando
+                                            ? <ActivityIndicator color="#fff" size="small" />
+                                            : <>
+                                                <Ionicons name="checkmark" size={18} color="#fff" />
+                                                <Text style={styles.confirmBtnText}>Confirmar</Text>
+                                              </>
+                                        }
+                                    </LinearGradient>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -625,6 +625,61 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F9FAFB',
     },
+    // Steps
+    stepContainer: {
+        backgroundColor: '#FFFFFF',
+        marginBottom: 8,
+    },
+    stepperContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+    },
+    step: {
+        alignItems: 'center',
+        width: 80,
+    },
+    stepCircleActive: {
+        backgroundColor: '#2563EB',
+    },
+    stepCircle: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#E5E7EB',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    stepNumberActive: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    stepNumber: {
+        color: '#9CA3AF',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    stepLabelActive: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#2563EB',
+    },
+    stepLabel: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#9CA3AF',
+    },
+    stepLine: {
+        height: 2,
+        flex: 1,
+        backgroundColor: '#E5E7EB',
+        marginHorizontal: 8,
+        marginBottom: 16,
+        maxWidth: 40,
+    },
     header: {
         backgroundColor: '#fff',
         paddingHorizontal: 20,
@@ -656,44 +711,6 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         marginTop: 1,
     },
-    // Steps
-    stepContainer: {
-        paddingHorizontal: 20,
-        paddingVertical: 20,
-        backgroundColor: '#fff',
-        marginBottom: 8,
-    },
-    stepRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    stepItem: { alignItems: 'center' },
-    stepCircle: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#E5E7EB',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    stepCircleActive: { backgroundColor: '#4F46E5' },
-    stepCircleDone: { backgroundColor: '#10B981' },
-    stepLabel: {
-        fontSize: 10,
-        color: '#9CA3AF',
-        marginTop: 4,
-        fontWeight: '600',
-    },
-    stepLabelActive: { color: '#4F46E5' },
-    stepLine: {
-        flex: 1,
-        height: 2,
-        backgroundColor: '#E5E7EB',
-        marginHorizontal: 6,
-        marginBottom: 16,
-    },
-    stepLineDone: { backgroundColor: '#10B981' },
     // Sections
     section: {
         backgroundColor: '#fff',
@@ -972,19 +989,28 @@ const styles = StyleSheet.create({
         color: '#111827',
     },
     // Botones
+    confirmBtnContainer: {
+        borderRadius: 14,
+        overflow: 'hidden',
+        shadowColor: '#2563EB',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    confirmBtnDisabled: {
+        opacity: 0.5,
+        shadowOpacity: 0,
+        elevation: 0,
+    },
     confirmBtn: {
-        backgroundColor: '#4F46E5',
         paddingHorizontal: 22,
         paddingVertical: 14,
-        borderRadius: 14,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
         minWidth: 130,
         justifyContent: 'center',
-    },
-    confirmBtnDisabled: {
-        backgroundColor: '#C4B5FD',
     },
     confirmBtnText: {
         color: '#fff',

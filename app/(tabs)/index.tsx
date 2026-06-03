@@ -1,24 +1,34 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
+import { LinearGradient } from 'expo-linear-gradient';
 import { logout } from '../../store/slices/authSlice';
+import api from '../../utils/api';
 
-// Calculando el ancho del gráfico basado en el tamaño de la pantalla
-const { width } = Dimensions.get('window');
-const GRAPHIC_WIDTH = width - 80;
+const { width, height } = Dimensions.get('window');
 
-/**
- * Pantalla de Inicio Principal (HomeScreen):
- * Esta es la primera pantalla que ve el usuario al entrar a la app (Dashboard). 
- * Muestra las opciones principales como buscar canchas ("Reservar ahora") y ver sus reservas.
- * También dibuja una rústica pero bonita cancha de fútbol usando "Views" nativos.
- */
 export default function HomeScreen() {
   const dispatch = useDispatch();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [stats, setStats] = useState({ users: 0, sedes: 0, reservas: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await api.get('/stats');
+        if (data?.success) {
+          setStats(data.data);
+        }
+      } catch (error) {
+        console.log("Error fetching stats:", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -29,57 +39,86 @@ export default function HomeScreen() {
     router.push('/(tabs)/sedes' as any);
   };
 
+  const goToReservas = () => {
+    router.push('/(tabs)/reservas' as any);
+  };
+
   return (
     <View style={styles.container}>
-      {/* Barra de navegación superior y Logo */}
+      {/* Barra de navegación superior transparente */}
       <View style={[styles.navBar, { paddingTop: Math.max(insets.top, 16) }]}>
-        <Text style={styles.logoText}>SoftPlay</Text>
-        <TouchableOpacity onPress={handleLogout}>
+        <Text style={styles.logoText}>Soft<Text style={{ color: '#3B82F6' }}>play</Text></Text>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
           <Text style={styles.logoutText}>Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        {/* Tarjeta Principal */}
-        <View style={styles.card}>
-          <Text style={styles.title}>Reserva tu cancha ahora</Text>
-          <Text style={styles.description}>
-            Encuentra y reserva las mejores canchas deportivas cerca de ti. Fútbol, tenis, básquet, pádel y más deportes disponibles con reserva inmediata.
-          </Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=1000' }}
+          style={styles.heroBackground}
+        >
+          {/* Overlay oscuro y gradiente */}
+          <View style={styles.overlay} />
+          <LinearGradient
+            colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.95)', '#F9FAFB']}
+            style={styles.gradientOverlay}
+          />
 
-          {/* Fila de botones de acción */}
-          <View style={styles.buttonsContainer}>
-            <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={goToSedes}>
-              <Text style={styles.primaryButtonText}>Reservar ahora</Text>
-            </TouchableOpacity>
+          <View style={styles.heroContent}>
+            {/* Badge */}
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeText}>LA EVOLUCIÓN DEL DEPORTE AMATEUR</Text>
+            </View>
 
-            <TouchableOpacity style={[styles.button, styles.secondaryButton]}>
-              <Text style={styles.secondaryButtonText}>Mis reservas</Text>
-            </TouchableOpacity>
-          </View>
+            {/* Título */}
+            <Text style={styles.mainTitle}>
+              Transformamos{'\n'}la <Text style={styles.highlightText}>gestión</Text>{'\n'}<Text style={styles.highlightTextGreen}>deportiva</Text>
+            </Text>
 
-          {/* Elemento gráfico: Cancha de fútbol dibujada puramente con vistas nativas */}
-          {/* Un rectángulo perimetral con línea divisoria intermedia, círculo central y áreas de portería */}
-          <View style={styles.graphicContainer}>
-            <Text style={styles.graphicText}>SoftPlay</Text>
+            <Text style={styles.description}>
+              La plataforma definitiva que conecta a dueños de canchas con deportistas apasionados. Gestiona, reserva y juega sin complicaciones.
+            </Text>
 
-            <View style={[styles.field, { width: GRAPHIC_WIDTH, height: GRAPHIC_WIDTH * 0.6 }]}>
-              {/* Área de portería izquierda */}
-              <View style={styles.leftPenaltyArea} />
+            {/* Botones */}
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity style={styles.primaryBtnContainer} onPress={goToSedes} activeOpacity={0.8}>
+                <LinearGradient colors={['#2563EB', '#4F46E5']} style={styles.primaryButton} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <Text style={styles.primaryButtonText}>Explorar Canchas</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#FFF" style={{ marginLeft: 8 }} />
+                </LinearGradient>
+              </TouchableOpacity>
 
-              {/* Línea divisoria central */}
-              <View style={styles.centerLine} />
+              <TouchableOpacity style={styles.secondaryButton} onPress={goToReservas} activeOpacity={0.8}>
+                <Text style={styles.secondaryButtonText}>Mis Reservas</Text>
+              </TouchableOpacity>
+            </View>
 
-              {/* Círculo del medio campo */}
-              <View style={styles.centerCircle} />
+            {/* Estadísticas Flotantes (Glassmorphism) */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statBox}>
+                <View style={styles.statIconBlue}>
+                  <Ionicons name="people" size={20} color="#3B82F6" />
+                </View>
+                <View>
+                  <Text style={styles.statNumber}>+{stats.users || 1200}</Text>
+                  <Text style={styles.statLabel}>DEPORTISTAS</Text>
+                </View>
+              </View>
 
-              {/* Área de portería derecha */}
-              <View style={styles.rightPenaltyArea} />
+              <View style={styles.statBox}>
+                <View style={styles.statIconGreen}>
+                  <Ionicons name="location" size={20} color="#10B981" />
+                </View>
+                <View>
+                  <Text style={styles.statNumber}>+{stats.sedes || 50}</Text>
+                  <Text style={styles.statLabel}>SEDES ACTIVAS</Text>
+                </View>
+              </View>
             </View>
           </View>
-
-        </View>
-      </View>
+        </ImageBackground>
+      </ScrollView>
     </View>
   );
 }
@@ -87,7 +126,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA', // Fondo muy claro para resaltar la tarjeta blanca
+    backgroundColor: '#F9FAFB',
   },
   navBar: {
     flexDirection: 'row',
@@ -95,143 +134,157 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    zIndex: 10,
   },
   logoText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#3B5ADB', // Color azul rescatado del diseño de marca de prueba
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#1F2937',
+  },
+  logoutBtn: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   logoutText: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#4B5563',
+    fontWeight: '600',
   },
-  content: {
+  heroBackground: {
+    width: '100%',
+    minHeight: height * 0.85,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+  },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroContent: {
     flex: 1,
-    padding: 24,
-    alignItems: 'center',
-    marginTop: 10,
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    justifyContent: 'center',
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+  badgeContainer: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
-    alignItems: 'center',
+    borderColor: '#BFDBFE',
+    marginBottom: 24,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#3B5ADB', // Tono azul principal del diseño
-    marginBottom: 16,
-    textAlign: 'left',
-    width: '100%',
-    lineHeight: 38,
+  badgeText: {
+    color: '#1D4ED8',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  mainTitle: {
+    fontSize: 44,
+    fontWeight: '900',
+    color: '#111827',
+    lineHeight: 48,
+    marginBottom: 24,
+  },
+  highlightText: {
+    color: '#2563EB',
+  },
+  highlightTextGreen: {
+    color: '#10B981',
   },
   description: {
     fontSize: 16,
-    color: '#4B5563', // Texto descriptivo en escala de grises
+    color: '#4B5563',
     lineHeight: 24,
-    marginBottom: 24,
-    textAlign: 'left',
-    width: '100%',
+    marginBottom: 40,
   },
   buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    width: '100%',
-    gap: 12,
-    marginBottom: 32,
+    flexDirection: 'column',
+    gap: 16,
+    marginBottom: 48,
   },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+  primaryBtnContainer: {
+    borderRadius: 16,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   primaryButton: {
-    backgroundColor: '#3B5ADB',
+    flexDirection: 'row',
+    paddingVertical: 18,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   primaryButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   secondaryButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB', // Borde gris muy sutil
-  },
-  secondaryButtonText: {
-    color: '#374151',
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  // --- Estilos del gráfico de la cancha ---
-  graphicContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  graphicText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 24,
-  },
-  field: {
-    borderWidth: 2,
-    borderColor: '#3B5ADB', // Bordes azules que simulan las líneas delimitantes de la cancha
-    position: 'relative',
+    paddingVertical: 18,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  centerLine: {
-    position: 'absolute',
-    width: 2,
-    height: '100%',
-    backgroundColor: '#3B5ADB',
+  secondaryButtonText: {
+    color: '#111827',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
-  centerCircle: {
-    position: 'absolute',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: '#3B5ADB',
-    backgroundColor: 'transparent',
+  statsContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 40,
   },
-  leftPenaltyArea: {
-    position: 'absolute',
-    left: 0,
-    top: '20%',
-    width: '20%',
-    height: '60%',
-    borderWidth: 2,
-    borderColor: '#3B5ADB',
-    borderLeftWidth: 0, // Se elimina el borde izquierdo para que se fusione con el perímetro mayor
+  statBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+    gap: 12,
   },
-  rightPenaltyArea: {
-    position: 'absolute',
-    right: 0,
-    top: '20%',
-    width: '20%',
-    height: '60%',
-    borderWidth: 2,
-    borderColor: '#3B5ADB',
-    borderRightWidth: 0,
+  statIconBlue: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statIconGreen: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#D1FAE5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#6B7280',
+    letterSpacing: 0.5,
   },
 });

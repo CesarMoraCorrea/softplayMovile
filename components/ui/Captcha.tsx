@@ -46,14 +46,37 @@ export default function Captcha({ onCaptchaChange, onVerifiedChange, error, disa
         setInputValue(text);
         if (captchaData) {
             onCaptchaChange(captchaData.id, text);
-            // Validamos temporalmente que el usuario haya escrito algún caracter para habilitar el botón
-            onVerifiedChange(text.length > 0);
         }
     };
 
+    useEffect(() => {
+        const timeoutId = setTimeout(async () => {
+            if (!captchaData || !inputValue) {
+                onVerifiedChange(false);
+                return;
+            }
+
+            try {
+                const response = await api.post('/captcha/check', {
+                    captchaId: captchaData.id,
+                    captchaInput: inputValue
+                });
+                const isValid = Boolean(response.data?.valid);
+                onVerifiedChange(isValid);
+            } catch (err) {
+                onVerifiedChange(false);
+            }
+        }, 300);
+        
+        return () => clearTimeout(timeoutId);
+    }, [inputValue, captchaData?.id]);
+
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Código de Seguridad</Text>
+            <View style={styles.labelContainer}>
+                <Ionicons name="shield-checkmark" size={16} color="#9CA3AF" />
+                <Text style={styles.label}>Verificación de seguridad</Text>
+            </View>
 
             <View style={styles.captchaContainer}>
                 {loading ? (
@@ -103,11 +126,16 @@ const styles = StyleSheet.create({
     container: {
         marginVertical: 10,
     },
+    labelContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+        gap: 6,
+    },
     label: {
         fontSize: 14,
         fontWeight: '600',
         color: '#374151',
-        marginBottom: 8,
     },
     captchaContainer: {
         flexDirection: 'row',

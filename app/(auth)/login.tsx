@@ -9,6 +9,7 @@ import {
     View
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { LinearGradient } from 'expo-linear-gradient';
 import Captcha from '../../components/ui/Captcha';
 import { loginThunk } from '../../store/slices/authSlice';
 
@@ -84,13 +85,17 @@ export default function LoginScreen() {
     };
 
     return (
-        // KeyboardAvoidingView: Evita que el teclado virtual del teléfono tape los inputs (como el de contraseña)
-        <KeyboardAvoidingView
+        // LinearGradient: Fondo premium estilo web
+        <LinearGradient
+            colors={['#EFF6FF', '#FFFFFF', '#EEF2FF']}
             style={styles.container}
-            behavior="padding"
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
         >
-            <ScrollView
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior="padding"
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+            >
+                <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={styles.scrollContent}
                 keyboardShouldPersistTaps="handled"
@@ -98,9 +103,12 @@ export default function LoginScreen() {
             >
 
                 <View style={styles.header}>
-                    <View style={styles.iconContainer}>
+                    <LinearGradient
+                        colors={['#2563EB', '#4F46E5']}
+                        style={styles.iconContainer}
+                    >
                         <Ionicons name="lock-closed" size={32} color="#FFF" />
-                    </View>
+                    </LinearGradient>
                     <Text style={styles.title}>¡Bienvenido!</Text>
                     <Text style={styles.subtitle}>Ingresa a tu cuenta para continuar</Text>
                 </View>
@@ -171,16 +179,21 @@ export default function LoginScreen() {
 
                     {/* Botón para Iniciar Sesión */}
                     <TouchableOpacity
-                        style={[styles.submitBtn, (loading || Object.keys(formErrors).length > 0 || !captchaVerified) && styles.submitBtnDisabled]}
+                        style={[styles.submitBtnContainer, (loading || Object.keys(formErrors).length > 0 || !captchaVerified) && styles.submitBtnDisabled]}
                         onPress={handleSubmit}
                         disabled={loading || Object.keys(formErrors).length > 0 || !captchaVerified}
                         activeOpacity={0.8}
                     >
-                        {loading ? (
-                            <ActivityIndicator color="#FFF" />
-                        ) : (
-                            <Text style={styles.submitBtnText}>Iniciar sesión</Text>
-                        )}
+                        <LinearGradient
+                            colors={['#2563EB', '#4F46E5']}
+                            style={styles.submitBtn}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#FFF" />
+                            ) : (
+                                <Text style={styles.submitBtnText}>Iniciar sesión</Text>
+                            )}
+                        </LinearGradient>
                     </TouchableOpacity>
 
                 </View>
@@ -194,14 +207,14 @@ export default function LoginScreen() {
                 </View>
 
             </ScrollView>
-        </KeyboardAvoidingView>
+            </KeyboardAvoidingView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#EFF6FF',
     },
     scrollContent: {
         flexGrow: 1,
@@ -214,18 +227,17 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     iconContainer: {
-        backgroundColor: '#3B82F6', // Color primario web para el contenedor del icono de candado
         width: 64,
         height: 64,
-        borderRadius: 16,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
-        shadowColor: '#3B82F6',
-        shadowOffset: { width: 0, height: 4 },
+        shadowColor: '#2563EB',
+        shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
+        shadowRadius: 12,
+        elevation: 8,
     },
     title: {
         fontSize: 28,
@@ -238,14 +250,16 @@ const styles = StyleSheet.create({
         color: '#4B5563',
     },
     formCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: 24,
         padding: 24,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 12,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.5)',
     },
     inputGroup: {
         marginBottom: 20,
@@ -267,7 +281,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F9FAFB',
         borderWidth: 2,
         borderColor: '#E5E7EB',
-        borderRadius: 12,
+        borderRadius: 16,
     },
     inputWrapperError: {
         borderColor: '#FCA5A5',
@@ -303,22 +317,25 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         textAlign: 'center',
     },
-    submitBtn: {
-        backgroundColor: '#3B82F6',
-        borderRadius: 12,
-        paddingVertical: 16,
-        alignItems: 'center',
+    submitBtnContainer: {
         marginTop: 8,
-        shadowColor: '#3B82F6',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
+        borderRadius: 16,
+        overflow: 'hidden',
+        shadowColor: '#2563EB',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
     },
     submitBtnDisabled: {
-        backgroundColor: '#9CA3AF',
+        opacity: 0.5,
         shadowOpacity: 0,
         elevation: 0,
+    },
+    submitBtn: {
+        paddingVertical: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     submitBtnText: {
         color: '#FFFFFF',

@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-// Apuntamos al backend de Vercel (develop preview)
-const API_URL = "https://softplay-backend-git-develop-cesarmoracorreas-projects.vercel.app";
+// Apuntamos al backend de Vercel (producción)
+const API_URL = "https://softplay-backend.vercel.app";
 
 const api = axios.create({
   baseURL: API_URL,

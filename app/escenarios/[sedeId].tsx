@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { ActivityIndicator, Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import api from '../../utils/api'; // Usamos nuestra propia conexión a la API
+import { LinearGradient } from 'expo-linear-gradient';
+import api from '../../utils/api';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +24,8 @@ export default function EscenariosScreen() {
     const insets = useSafeAreaInsets();
 
     const [escenarios, setEscenarios] = useState<any[]>([]);
+    const [sede, setSede] = useState<any>(null);
+    const [deporte, setDeporte] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,12 +33,16 @@ export default function EscenariosScreen() {
     const fetchLocalEscenarios = async () => {
         try {
             setLoading(true);
-            setError(null); // Limpiamos cualquier error previo
+            setError(null);
+            // Traemos info de la sede y sus escenarios
+            const { data: sedeData } = await api.get(`/sedes/${sedeId}`);
+            setSede(sedeData);
+            
             const { data } = await api.get(`/sedes?view=escenarios&sedeId=${sedeId}`);
             setEscenarios(data);
         } catch (err: any) {
             setError(err.message || "Error al cargar los escenarios");
-            setEscenarios([]); // Si algo falla, vaciamos la lista
+            setEscenarios([]);
         } finally {
             setLoading(false);
         }
@@ -47,55 +54,81 @@ export default function EscenariosScreen() {
         }
     }, [sedeId]);
 
+    const deportes = useMemo(() => {
+        return [...new Set(escenarios.filter(e => e.activo !== false).map(e => e.tipoCancha || e.tipoDeporte))].sort();
+    }, [escenarios]);
+
+    const escenariosFiltrados = useMemo(() => {
+        return deporte ? escenarios.filter(e => e.activo !== false && (e.tipoCancha === deporte || e.tipoDeporte === deporte)) : [];
+    }, [escenarios, deporte]);
+
+    const DEPORTE_ICONS: any = {
+        "Fútbol": "⚽",
+        "Futbol": "⚽",
+        "Fútbol 5": "⚽",
+        "Fútbol 7": "⚽",
+        "Fútbol 11": "⚽",
+        "Tenis": "🎾",
+        "Pádel": "🎾",
+        "Padel": "🎾",
+        "Básquet": "🏀",
+        "Basquet": "🏀",
+        "Vóley": "🏐",
+        "Voley": "🏐"
+    };
+
     const renderEscenarioCard = ({ item }: { item: any }) => {
-        // Tomamos la primera imagen disponible o mostramos nuestra foto por defecto
         const coverImage = item.imagenes && item.imagenes.length > 0
             ? { uri: item.imagenes[0] }
             : { uri: FALLBACK_IMAGE };
 
         return (
-            <View style={styles.card}>
-                <Image source={coverImage} style={styles.cardImage} resizeMode="cover" />
+            <TouchableOpacity 
+                style={styles.card} 
+                activeOpacity={0.9}
+                onPress={() => {
+                    router.push({
+                        pathname: `/reservas/[escenarioId]` as any,
+                        params: { 
+                            escenarioId: item.escenarioId || item._id, 
+                            sedeId: sedeId,
+                            nombreCancha: item.nombre,
+                            precioHora: item.precioPorHora || item.precioHora || 0
+                        }
+                    });
+                }}
+            >
+                <View style={styles.cardImageContainer}>
+                    <Image source={coverImage} style={styles.cardImage} resizeMode="cover" />
+                    <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.8)']}
+                        style={styles.cardGradient}
+                    />
+                </View>
 
                 <View style={styles.cardContent}>
                     <View style={styles.cardHeader}>
                         <Text style={styles.cardTitle}>{item.nombre}</Text>
-                    </View>
-
-                    <View style={styles.tagsContainer}>
-                        {item.tipoCancha && (
-                            <View style={styles.tag}>
-                                <Ionicons name="football-outline" size={14} color="#3B5ADB" />
-                                <Text style={styles.tagText}>{item.tipoCancha}</Text>
-                            </View>
-                        )}
+                        <View style={styles.superficieBadge}>
+                            <Text style={styles.superficieText}>{item.superficie || item.tipoCancha || "Sintética"}</Text>
+                        </View>
                     </View>
 
                     <View style={styles.priceRow}>
                         <View>
-                            <Text style={styles.priceLabel}>Precio por hora</Text>
-                            <Text style={styles.priceValue}>${item.precioHora?.toLocaleString("es-AR") || 0}</Text>
+                            <Text style={styles.priceLabel}>PRECIO</Text>
+                            <Text style={styles.priceValue}>${(item.precioPorHora || item.precioHora || 0).toLocaleString("es-AR")}<Text style={styles.priceSuffix}>/h</Text></Text>
                         </View>
-
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => {
-                                router.push({
-                                    pathname: `/reservas/[escenarioId]` as any,
-                                    params: { 
-                                        escenarioId: item.escenarioId || item._id, 
-                                        sedeId: sedeId,
-                                        nombreCancha: item.nombre,
-                                        precioHora: item.precioPorHora || item.precioHora || 0
-                                    }
-                                });
-                            }}
-                        >
-                            <Text style={styles.actionButtonText}>Reservar</Text>
-                        </TouchableOpacity>
                     </View>
                 </View>
-            </View>
+                
+                <View style={styles.cardFooter}>
+                    <LinearGradient colors={['#3B82F6', '#2563EB']} style={styles.cardFooterGradient} start={{x:0, y:0}} end={{x:1, y:0}}>
+                        <Text style={styles.cardFooterText}>Reservar escenario</Text>
+                        <Ionicons name="arrow-forward" size={16} color="#FFF" />
+                    </LinearGradient>
+                </View>
+            </TouchableOpacity>
         );
     };
 
@@ -104,13 +137,40 @@ export default function EscenariosScreen() {
             {/* Encabezado de la pantalla con el botón para regresar */}
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color="#1F2937" />
+                    <Ionicons name="arrow-back" size={24} color="#4B5563" />
                 </TouchableOpacity>
                 <View style={styles.headerTitles}>
-                    <Text style={styles.mainTitle}>Escenarios</Text>
-                    <Text style={styles.subTitle}>
-                        {escenarios?.length || 0} canchas disponibles
-                    </Text>
+                    <Text style={styles.mainTitle} numberOfLines={1}>{sede?.nombre || "Cargando..."}</Text>
+                    <View style={styles.locationRow}>
+                        <Ionicons name="location" size={14} color="#6B7280" />
+                        <Text style={styles.subTitle} numberOfLines={1}>
+                            {sede?.ubicacion?.direccion || ""}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* Stepper */}
+            <View style={styles.stepperContainer}>
+                <View style={styles.step}>
+                    <View style={[styles.stepCircle, styles.stepCircleActive]}>
+                        <Text style={styles.stepNumberActive}>1</Text>
+                    </View>
+                    <Text style={styles.stepLabelActive}>CANCHA</Text>
+                </View>
+                <View style={styles.stepLine} />
+                <View style={styles.step}>
+                    <View style={styles.stepCircle}>
+                        <Text style={styles.stepNumber}>2</Text>
+                    </View>
+                    <Text style={styles.stepLabel}>HORARIO</Text>
+                </View>
+                <View style={styles.stepLine} />
+                <View style={styles.step}>
+                    <View style={styles.stepCircle}>
+                        <Text style={styles.stepNumber}>3</Text>
+                    </View>
+                    <Text style={styles.stepLabel}>CONFIRMAR</Text>
                 </View>
             </View>
 
@@ -148,13 +208,41 @@ export default function EscenariosScreen() {
                     </TouchableOpacity>
                 </View>
             ) : (
-                <FlatList
-                    data={escenarios}
-                    keyExtractor={(item) => item.escenarioId || item._id}
-                    renderItem={renderEscenarioCard}
-                    contentContainerStyle={styles.listContainer}
-                    showsVerticalScrollIndicator={false}
-                />
+                <View style={{ flex: 1 }}>
+                    <View style={styles.filtersContainer}>
+                        <Text style={styles.sectionTitle}>DEPORTE</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.deportesList}>
+                            {deportes.map((d, index) => (
+                                <TouchableOpacity 
+                                    key={`deporte-${String(d)}-${index}`}
+                                    style={[styles.deporteBtn, deporte === d && styles.deporteBtnActive]}
+                                    onPress={() => setDeporte(d as string)}
+                                >
+                                    <Text style={styles.deporteEmoji}>{DEPORTE_ICONS[d as string] || "🏟️"}</Text>
+                                    <Text style={[styles.deporteText, deporte === d && styles.deporteTextActive]}>{String(d)}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+
+                    {!deporte ? (
+                        <View style={styles.centerContainer}>
+                            <Text style={{ fontSize: 32, marginBottom: 12 }}>👈</Text>
+                            <Text style={styles.emptySubtitle}>Selecciona un deporte para ver los escenarios</Text>
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={escenariosFiltrados}
+                            keyExtractor={(item) => item.escenarioId || item._id}
+                            renderItem={renderEscenarioCard}
+                            contentContainerStyle={styles.listContainer}
+                            showsVerticalScrollIndicator={false}
+                            ListHeaderComponent={() => (
+                                <Text style={styles.sectionTitle}>ESCENARIOS DISPONIBLES · {deporte?.toUpperCase()}</Text>
+                            )}
+                        />
+                    )}
+                </View>
             )}
         </View>
     );
@@ -189,39 +277,161 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     mainTitle: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#111827',
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 2,
+        gap: 4,
     },
     subTitle: {
         fontSize: 14,
         color: '#6B7280',
-        marginTop: 2,
+    },
+    stepperContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    step: {
+        alignItems: 'center',
+        width: 80,
+    },
+    stepCircleActive: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#2563EB',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    stepCircle: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#E5E7EB',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    stepNumberActive: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    stepNumber: {
+        color: '#9CA3AF',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    stepLabelActive: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#2563EB',
+    },
+    stepLabel: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#9CA3AF',
+    },
+    stepLine: {
+        height: 2,
+        flex: 1,
+        backgroundColor: '#E5E7EB',
+        marginHorizontal: 8,
+        marginBottom: 16,
+        maxWidth: 40,
+    },
+    filtersContainer: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+    },
+    sectionTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#9CA3AF',
+        letterSpacing: 1,
+        marginBottom: 12,
+    },
+    deportesList: {
+        gap: 12,
+        paddingBottom: 20,
+    },
+    deporteBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        gap: 8,
+    },
+    deporteBtnActive: {
+        backgroundColor: '#2563EB',
+        borderColor: '#2563EB',
+    },
+    deporteEmoji: {
+        fontSize: 18,
+    },
+    deporteText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    deporteTextActive: {
+        color: '#FFFFFF',
     },
     listContainer: {
         padding: 20,
+        paddingTop: 0,
         gap: 20,
     },
     card: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 20,
+        borderRadius: 24,
         overflow: 'hidden',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.1,
-        shadowRadius: 10,
+        shadowRadius: 16,
         elevation: 4,
         borderWidth: 1,
         borderColor: '#F3F4F6',
-        marginBottom: 4,
+        marginBottom: 8,
+    },
+    cardImageContainer: {
+        width: '100%',
+        height: 160,
+        position: 'relative',
     },
     cardImage: {
         width: '100%',
-        height: 180,
+        height: '100%',
         backgroundColor: '#E5E7EB',
+    },
+    cardGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 80,
     },
     cardContent: {
         padding: 20,
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        marginTop: -20,
     },
     cardHeader: {
         marginBottom: 12,
@@ -230,60 +440,56 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '800',
         color: '#1F2937',
+        marginBottom: 6,
     },
-    tagsContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginBottom: 16,
-        gap: 8,
-    },
-    tag: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#EEF2FF',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+    superficieBadge: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#F3F4F6',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: 8,
-        gap: 6,
     },
-    tagText: {
-        color: '#3B5ADB',
-        fontSize: 13,
+    superficieText: {
+        fontSize: 12,
         fontWeight: '600',
+        color: '#6B7280',
     },
     priceRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
+        alignItems: 'flex-end',
+        marginTop: 4,
     },
     priceLabel: {
-        fontSize: 12,
-        color: '#6B7280',
-        marginBottom: 4,
-        fontWeight: '500',
+        fontSize: 10,
+        color: '#9CA3AF',
+        marginBottom: 2,
+        fontWeight: 'bold',
+        letterSpacing: 1,
     },
     priceValue: {
-        fontSize: 22,
-        fontWeight: '800',
-        color: '#3B5ADB',
+        fontSize: 24,
+        fontWeight: '900',
+        color: '#2563EB',
     },
-    actionButton: {
-        backgroundColor: '#3B5ADB',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-        shadowColor: '#3B5ADB',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+    priceSuffix: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#9CA3AF',
     },
-    actionButtonText: {
+    cardFooter: {
+        width: '100%',
+    },
+    cardFooterGradient: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 14,
+        gap: 8,
+    },
+    cardFooterText: {
         color: '#FFFFFF',
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: 'bold',
     },
     centerContainer: {

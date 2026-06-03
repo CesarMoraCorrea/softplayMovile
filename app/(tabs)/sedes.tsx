@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View, TextInput, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
+import { LinearGradient } from 'expo-linear-gradient';
 import { fetchCanchas } from '../../store/slices/canchasSlice'; // Acción para recuperar las Sedes (Canchas globalmente) desde Redux
 
 const { width } = Dimensions.get('window');
@@ -22,6 +23,8 @@ export default function SedesScreen() {
     const insets = useSafeAreaInsets();
 
     const { list: sedes, loading, error } = useSelector((state: any) => state.canchas);
+    const [busqueda, setBusqueda] = useState("");
+    const [vistaActual, setVistaActual] = useState("lista");
 
     useFocusEffect(
         useCallback(() => {
@@ -30,48 +33,101 @@ export default function SedesScreen() {
         }, [dispatch])
     );
 
-    const renderSedeCard = ({ item }: { item: any }) => (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                <View style={styles.cardTitleContainer}>
-                    <Text style={styles.cardTitle}>{item.nombre}</Text>
-                    <Text style={styles.cardSubtitle}>
-                        {item.ubicacion?.direccion || "Dirección no disponible"}
-                    </Text>
-                </View>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="business" size={24} color="#3B5ADB" />
-                </View>
-            </View>
+    const renderSedeCard = ({ item }: { item: any }) => {
+        const imagenPrincipal = item.imagenes && item.imagenes.length > 0
+            ? item.imagenes[0]
+            : 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=1000';
 
-            <View style={styles.cardInfoRow}>
-                <Text style={styles.infoText}>{(item.escenarios || []).length} escenarios</Text>
-                <Text style={styles.infoText}>{item.ubicacion?.barrio || "Sin barrio"}</Text>
-            </View>
-
-            <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => {
-                    router.push(`/escenarios/${item._id}` as any);
-                }}
+        return (
+            <TouchableOpacity 
+                style={styles.card} 
+                activeOpacity={0.9} 
+                onPress={() => router.push(`/escenarios/${item._id}` as any)}
             >
-                <Text style={styles.actionButtonText}>Ver escenarios</Text>
+                <Image source={{ uri: imagenPrincipal }} style={styles.cardImage} />
+                
+                <View style={styles.cardBody}>
+                    <View style={styles.cardHeaderRow}>
+                        <View style={{ flex: 1, paddingRight: 12 }}>
+                            <Text style={styles.cardTitle} numberOfLines={1}>{item.nombre}</Text>
+                            <View style={styles.locationRow}>
+                                <Ionicons name="location-outline" size={14} color="#6B7280" />
+                                <Text style={styles.cardSubtitle} numberOfLines={1}>
+                                    {item.ubicacion?.direccion || "Dirección no disponible"}
+                                </Text>
+                            </View>
+                        </View>
+                        <View style={styles.iconBadge}>
+                            <Ionicons name="business" size={20} color="#3B82F6" />
+                        </View>
+                    </View>
+
+                    <View style={styles.cardInfoRow}>
+                        <View style={styles.pill}>
+                            <Text style={styles.pillText}>{(item.escenarios || []).length} escenarios</Text>
+                        </View>
+                        <Text style={styles.barrioText}>{item.ubicacion?.barrio || "Sin barrio"}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                        style={styles.actionButtonContainer}
+                        onPress={() => router.push(`/escenarios/${item._id}` as any)}
+                        activeOpacity={0.8}
+                    >
+                        <View style={styles.actionButton}>
+                            <Text style={styles.actionButtonText}>Reservar aquí</Text>
+                        </View>
+                    </TouchableOpacity>
+                </View>
             </TouchableOpacity>
-        </View>
-    );
+        );
+    };
 
     return (
         <View style={styles.container}>
             {/* Piezas del Encabezado Superior */}
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color="#1F2937" />
-                </TouchableOpacity>
-                <View style={styles.headerTitles}>
+                <View style={styles.headerTop}>
                     <Text style={styles.mainTitle}>Encuentra tu sede</Text>
                     <Text style={styles.subTitle}>
                         {sedes?.length || 0} sedes disponibles cerca de ti
                     </Text>
+                </View>
+
+                {/* Buscador y Filtros */}
+                <View style={styles.searchRow}>
+                    <View style={styles.searchInputContainer}>
+                        <Ionicons name="search" size={20} color="#9CA3AF" />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Buscador de canchas..."
+                            value={busqueda}
+                            onChangeText={setBusqueda}
+                            placeholderTextColor="#9CA3AF"
+                        />
+                    </View>
+                    <TouchableOpacity style={styles.filterBtn}>
+                        <Ionicons name="options-outline" size={20} color="#374151" />
+                        <Text style={styles.filterBtnText}>Filtros</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Segmented Control */}
+                <View style={styles.segmentedControl}>
+                    <TouchableOpacity 
+                        style={[styles.segment, vistaActual === 'mapa' && styles.segmentActive]}
+                        onPress={() => setVistaActual('mapa')}
+                    >
+                        <Ionicons name="map" size={16} color={vistaActual === 'mapa' ? "#3B82F6" : "#6B7280"} />
+                        <Text style={[styles.segmentText, vistaActual === 'mapa' && styles.segmentTextActive]}>Mapa</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.segment, vistaActual === 'lista' && styles.segmentActive]}
+                        onPress={() => setVistaActual('lista')}
+                    >
+                        <Ionicons name="list" size={16} color={vistaActual === 'lista' ? "#3B82F6" : "#6B7280"} />
+                        <Text style={[styles.segmentText, vistaActual === 'lista' && styles.segmentTextActive]}>Lista</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -124,16 +180,10 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#F3F4F6',
-        flexDirection: 'row',
+    },
+    headerTop: {
         alignItems: 'center',
-    },
-    backButton: {
-        marginRight: 16,
-        padding: 8,
-        marginLeft: -8,
-    },
-    headerTitles: {
-        flex: 1,
+        marginBottom: 16,
     },
     mainTitle: {
         fontSize: 24,
@@ -143,69 +193,157 @@ const styles = StyleSheet.create({
     subTitle: {
         fontSize: 14,
         color: '#6B7280',
-        marginTop: 2,
+        marginTop: 4,
+    },
+    searchRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 16,
+    },
+    searchInputContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9FAFB',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 44,
+    },
+    searchInput: {
+        flex: 1,
+        marginLeft: 8,
+        fontSize: 15,
+        color: '#1F2937',
+    },
+    filterBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        height: 44,
+        gap: 6,
+    },
+    filterBtnText: {
+        color: '#374151',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    segmentedControl: {
+        flexDirection: 'row',
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        padding: 4,
+        alignSelf: 'center',
+        width: 240,
+    },
+    segment: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        borderRadius: 8,
+        gap: 6,
+    },
+    segmentActive: {
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    segmentText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#6B7280',
+    },
+    segmentTextActive: {
+        color: '#3B82F6',
     },
     listContainer: {
         padding: 20,
         gap: 16,
+        paddingBottom: 40,
     },
     card: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
+        borderRadius: 24,
+        overflow: 'hidden',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        elevation: 4,
         borderWidth: 1,
         borderColor: '#F3F4F6',
     },
-    cardHeader: {
+    cardImage: {
+        width: '100%',
+        height: 180,
+    },
+    cardBody: {
+        padding: 20,
+    },
+    cardHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: 16,
     },
-    cardTitleContainer: {
-        flex: 1,
-        paddingRight: 12,
-    },
     cardTitle: {
         fontSize: 18,
-        fontWeight: '700',
+        fontWeight: '800',
         color: '#1F2937',
-        marginBottom: 4,
+        marginBottom: 6,
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
     },
     cardSubtitle: {
         fontSize: 14,
         color: '#6B7280',
     },
-    iconContainer: {
-        width: 48,
-        height: 48,
+    iconBadge: {
+        backgroundColor: '#EFF6FF',
+        padding: 10,
         borderRadius: 12,
-        backgroundColor: '#EEF2FF',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     cardInfoRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 20,
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
     },
-    infoText: {
+    pill: {
+        backgroundColor: '#F3F4F6',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    pillText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    barrioText: {
         fontSize: 14,
-        color: '#4B5563',
+        color: '#6B7280',
         fontWeight: '500',
     },
-    actionButton: {
-        backgroundColor: '#3B5ADB',
+    actionButtonContainer: {
         borderRadius: 12,
+        overflow: 'hidden',
+    },
+    actionButton: {
+        backgroundColor: '#2563EB',
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
@@ -213,7 +351,7 @@ const styles = StyleSheet.create({
     actionButtonText: {
         color: '#FFFFFF',
         fontSize: 15,
-        fontWeight: '600',
+        fontWeight: 'bold',
     },
     centerContainer: {
         flex: 1,

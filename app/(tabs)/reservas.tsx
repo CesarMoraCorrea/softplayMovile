@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
+import { LinearGradient } from 'expo-linear-gradient';
 import { cancelarReservaThunk, misReservasThunk } from '../../store/slices/reservasSlice';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -29,14 +30,14 @@ const getEstadoColor = (estado: string) => {
     }
 };
 
-const getEstadoBarColor = (estado: string) => {
+const getEstadoGradient = (estado: string) => {
     switch (estado?.toLowerCase()) {
         case 'confirmada':
-        case 'pagada':    return '#10B981';
-        case 'pendiente': return '#F59E0B';
-        case 'cancelada': return '#EF4444';
-        case 'completada':return '#3B82F6';
-        default:          return '#D1D5DB';
+        case 'pagada':    return ['#10B981', '#059669'];
+        case 'pendiente': return ['#F59E0B', '#D97706'];
+        case 'cancelada': return ['#EF4444', '#B91C1C'];
+        case 'completada':return ['#3B82F6', '#2563EB'];
+        default:          return ['#9CA3AF', '#6B7280'];
     }
 };
 
@@ -63,13 +64,13 @@ function TarjetaReserva({
     onCancelar: (r: any) => void;
 }) {
     const estadoColors = getEstadoColor(reserva.estado);
-    const barColor = getEstadoBarColor(reserva.estado);
+    const barGradient = getEstadoGradient(reserva.estado);
     const puedeCancelar = reserva.estado === 'pendiente';
 
     return (
         <View style={styles.card}>
             {/* Barra de color superior por estado */}
-            <View style={[styles.cardBar, { backgroundColor: barColor }]} />
+            <LinearGradient colors={barGradient as [string, string]} style={styles.cardBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
 
             <View style={styles.cardBody}>
                 {/* Header de la tarjeta */}
@@ -199,10 +200,13 @@ export default function MisReservasScreen() {
                     <Text style={styles.emptyTitle}>Sesión requerida</Text>
                     <Text style={styles.emptySubtitle}>Inicia sesión para ver tus reservas</Text>
                     <TouchableOpacity
-                        style={styles.actionBtn}
+                        style={styles.actionBtnContainer}
                         onPress={() => router.push('/(auth)/login')}
+                        activeOpacity={0.8}
                     >
-                        <Text style={styles.actionBtnText}>Iniciar Sesión</Text>
+                        <LinearGradient colors={['#2563EB', '#4F46E5']} style={styles.actionBtn}>
+                            <Text style={styles.actionBtnText}>Iniciar Sesión</Text>
+                        </LinearGradient>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -257,10 +261,13 @@ export default function MisReservasScreen() {
                                 Aún no tienes ninguna reserva. ¡Explora las sedes y reserva tu cancha!
                             </Text>
                             <TouchableOpacity
-                                style={styles.actionBtn}
+                                style={styles.actionBtnContainer}
                                 onPress={() => router.push('/(tabs)/sedes')}
+                                activeOpacity={0.8}
                             >
-                                <Text style={styles.actionBtnText}>Buscar Canchas</Text>
+                                <LinearGradient colors={['#2563EB', '#4F46E5']} style={styles.actionBtn}>
+                                    <Text style={styles.actionBtnText}>Buscar Canchas</Text>
+                                </LinearGradient>
                             </TouchableOpacity>
                         </View>
                     ) : (
@@ -407,12 +414,21 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 22,
     },
-    actionBtn: {
+    actionBtnContainer: {
         marginTop: 12,
-        backgroundColor: '#4F46E5',
+        borderRadius: 12,
+        overflow: 'hidden',
+        shadowColor: '#2563EB',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    actionBtn: {
         paddingHorizontal: 28,
         paddingVertical: 14,
-        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     actionBtnText: {
         color: '#fff',
@@ -422,14 +438,16 @@ const styles = StyleSheet.create({
     // Card
     card: {
         backgroundColor: '#fff',
-        borderRadius: 16,
+        borderRadius: 20,
         overflow: 'hidden',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 4,
-        marginBottom: 4,
+        shadowRadius: 12,
+        elevation: 6,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
     },
     cardBar: {
         height: 4,
